@@ -1,0 +1,25 @@
+[Unit]
+Description=youtubeUnblock
+
+[Service]
+StandardError=journal
+StandardOutput=journal
+StandardInput=null
+ExecStartPre=/bin/bash -c 'iptables -t mangle -N YOUTUBEUNBLOCK ; \
+  iptables -t mangle -A YOUTUBEUNBLOCK -p tcp --dport 443 -m connbytes --connbytes-dir original --connbytes-mode packets --connbytes 0:19 -j NFQUEUE --queue-num 537 --queue-bypass ; \
+  iptables -t mangle -A YOUTUBEUNBLOCK -p udp -m connbytes --connbytes-dir original --connbytes-mode packets --connbytes 0:8 -j NFQUEUE --queue-num 537 --queue-bypass ; \
+  iptables -t mangle -A OUTPUT -m owner --uid-owner 548 -d 127.0.0.0/8 -j RETURN ; \
+  iptables -t mangle -A OUTPUT -m owner --uid-owner 548 -d 192.168.0.0/16 -j RETURN ; \
+  iptables -t mangle -A OUTPUT -m owner --uid-owner 548 -j YOUTUBEUNBLOCK ; \
+  iptables -I OUTPUT -m mark --mark 32768/32768 -j ACCEPT'
+ExecStart=/opt/data/youtubeUnblock/youtubeUnblock --no-ipv6
+ExecStop=/bin/bash -c 'iptables -t mangle -D YOUTUBEUNBLOCK -p tcp --dport 443 -m connbytes --connbytes-dir original --connbytes-mode packets --connbytes 0:19 -j NFQUEUE --queue-num 537 --queue-bypass && \
+  iptables -t mangle -D YOUTUBEUNBLOCK -p udp -m connbytes --connbytes-dir original --connbytes-mode packets --connbytes 0:8 -j NFQUEUE --queue-num 537 --queue-bypass && \
+  iptables -t mangle -D OUTPUT -m owner --uid-owner 548 -d 127.0.0.0/8 -j RETURN && \
+  iptables -t mangle -D OUTPUT -m owner --uid-owner 548 -d 192.168.0.0/16 -j RETURN && \
+  iptables -t mangle -D OUTPUT -m owner --uid-owner 548 -j YOUTUBEUNBLOCK && \
+  iptables -D OUTPUT -m mark --mark 32768/32768 -j ACCEPT && \
+  iptables -t mangle -X YOUTUBEUNBLOCK'
+
+[Install]
+WantedBy=multi-user.target
