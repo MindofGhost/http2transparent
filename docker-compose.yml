@@ -1,0 +1,17 @@
+services:
+  gost_to_youtubeUnblock:
+    image: ginuerzh/gost
+    container_name: gost_to_youtubeUnblock
+    restart: always
+    user: "548"
+    network_mode: host
+    mem_limit: 50M
+    logging:
+      driver: "journald"
+      options:
+        tag: "{{.Name}}"
+    ports:
+      - "127.0.0.1:8888:8888"
+    security_opt:
+      - "no-new-privileges=true"
+    command: "-L=:8888"
